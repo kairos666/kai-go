@@ -6,11 +6,10 @@ import { Component } from '@stencil/core';
     shadow: true
 })
 export class AppGoban {
-
     render() {
         return (
             <div class='app-goban'>
-                <p>goban page</p>
+                <kaigo-game></kaigo-game>
             </div>
         );
     }
