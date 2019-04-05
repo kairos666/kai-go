@@ -7,6 +7,8 @@ import { Component, Prop } from '@stencil/core';
 })
 export class Goban {
     @Prop() size:9|13|19 = 19;
+    @Prop() schema:number[] = new Array(Math.pow(this.size, 2)).fill(0);
+
     private boardOuterMargins:string = '10vmin';
     private lineThickness:string = '2px';
     private starPoints = {
@@ -22,15 +24,15 @@ export class Goban {
                     {new Array(Math.pow(this.size - 1, 2)).fill(0).map(() => <span class="gbn-Goban_BoardCell"></span>)}
                 </div>
                 <div class="gbn-Goban_StonesContainer" style={ this.stoneContainerDynamicStyles(this.size) }>
-                    {new Array(Math.pow(this.size, 2)).fill(0).map((_item, index) => {
+                    {this.schema.map((schemaValue, index) => {
                         const isStarPoint = this.isStarPoint(index, this.size);
-                        const isWhite = (Math.random() - 0.5 >= 0);
-                        const isBlack = (Math.random() - 0.5 >= 0);
                         let classes = 'gbn-Goban_Stone';
-
+                        // is star point
                         if(isStarPoint) classes += ' gbn-Goban_Stone-star-point';
-                        if(isWhite) classes += ' gbn-Goban_Stone-white';
-                        if(isBlack) classes += ' gbn-Goban_Stone-black';
+                        // is white stone
+                        if(schemaValue == -1) classes += ' gbn-Goban_Stone-white';
+                        // is black stone
+                        if(schemaValue == 1) classes += ' gbn-Goban_Stone-black';
                         
                         return <span class={ classes }></span>;
                     })}
