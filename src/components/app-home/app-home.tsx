@@ -22,6 +22,11 @@ export class AppHome {
             Profile page
           </button>
         </stencil-route-link>
+        <stencil-route-link url='/goban'>
+          <button>
+            goban page
+          </button>
+        </stencil-route-link>
       </div>
     );
   }
