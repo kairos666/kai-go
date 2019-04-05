@@ -10,7 +10,7 @@ export class AppGoban {
     render() {
         return (
             <div class='app-goban'>
-                <p>goban page</p>
+                <kaigo-goban></kaigo-goban>
             </div>
         );
     }

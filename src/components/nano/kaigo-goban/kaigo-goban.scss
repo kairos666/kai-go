@@ -1,0 +1,56 @@
+$line-thickness: 2px;
+$board-outer-margins: 10vmin;
+
+// size board in square shape
+.gbn-Goban {
+    width: 100vmin;
+    height:100vmin;
+    position:relative;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+// draw board
+.gbn-Goban_Board {
+    position:absolute;
+    display: grid;
+    border-color: $kai-dark;
+    border-style: solid;
+    background-color:$kai-dark;
+}
+.gbn-Goban_BoardCell {
+    padding-top:100%; // ensure width = height
+    background-color:#fff;
+}
+
+// draw stones
+.gbn-Goban_StonesContainer {
+    position:absolute;
+    display: grid;
+    justify-items: center;
+    align-items: center;
+}
+
+.gbn-Goban_Stone {
+    &.gbn-Goban_Stone-star-point {
+        display:block;
+        width: 6 * $line-thickness;
+        height: 6 * $line-thickness;
+        background-color: $kai-dark;
+        border-radius: 50% 50%;
+    }
+    &.gbn-Goban_Stone-white {
+        display:block;
+        width: 100%;
+        height: 100%;
+        background-color: #eee;
+        border-radius: 50% 50%;
+    }
+    &.gbn-Goban_Stone-black {
+        display:block;
+        width: 100%;
+        height: 100%;
+        background-color: #333;
+        border-radius: 50% 50%;
+    }
+}
