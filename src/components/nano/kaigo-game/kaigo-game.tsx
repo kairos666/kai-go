@@ -1,4 +1,4 @@
-import { Component } from '@stencil/core';
+import { Component, Prop, Watch } from '@stencil/core';
 import WGO from 'wgo';
 
 @Component({
@@ -7,25 +7,38 @@ import WGO from 'wgo';
     shadow: true
 })
 export class GoGame {
+    @Prop() size:9|13|19 = 19;
     private goGame;
 
     componentWillLoad() {
-        this.goGame = new WGO.Game(19);
+        this.goGame = new WGO.Game(this.size);
         console.log(this.addStone(0, 0, WGO.BLACK));
         console.log(this.play(1, 0, WGO.BLACK));
         console.log(this.play(2, 0, WGO.WHITE));
         console.log(this.play(3, 0, WGO.BLACK));
         console.log(this.play(3, 0, WGO.WHITE));
         console.log(this.play(2, 1, WGO.BLACK));
+        console.log(this.play(2, 4, WGO.BLACK));
         this.popPosition();
         console.log(this.getStone(2, 0));
         console.log(this.getPosition());
+        console.log(this.goGame);
+    }
+
+    @Watch('size')
+    sizeChangeHandler(newValue:number, oldValue:number) {
+        // only act when size is different
+        if(newValue !== oldValue) {
+            this.goGame = null;
+            this.goGame = new WGO.Game(newValue);
+        }
     }
 
     render() {
         return [
-            <span>captured stones: W = { this.getCaptureCount(WGO.WHITE) } / B = { this.getCaptureCount(WGO.BLACK) }</span>,
-            <kaigo-goban size={19} schema={ this.getPosition().schema }></kaigo-goban>
+            <p>captured stones: W = { this.getCaptureCount(WGO.WHITE) } / B = { this.getCaptureCount(WGO.BLACK) }</p>,
+            <p>player turn: { (this.goGame.turn == 1) ? 'BLACK' : 'WHITE' }</p>,
+            <kaigo-goban size={ this.size } schema={ this.getPosition().schema }></kaigo-goban>
         ];
     }
 
@@ -77,6 +90,7 @@ export class GoGame {
     play(x:number, y:number, c:WGO.BLACK|WGO.WHITE, noplay:boolean = false):{x:number, y:number}[]|1|2|3|4 {
         /**
          * error codes
+         * 0 = wrong turn (black tried to played instead of white or reverse)
          * 1 = given coordinates are not on board 
          * 2 = on given coordinates already is a stone 
          * 3 = suicide (currently they are forbbiden) 
