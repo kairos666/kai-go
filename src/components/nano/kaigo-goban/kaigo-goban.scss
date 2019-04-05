@@ -32,24 +32,32 @@ $board-outer-margins: 10vmin;
 }
 
 .gbn-Goban_Stone {
+    display:block;
+    width: 100%;
+    height: 100%;
+    &:hover, &:active, &:focus {
+        border: $line-thickness solid $kai-theme-color;
+        cursor: pointer;
+    }
     &.gbn-Goban_Stone-star-point {
-        display:block;
-        width: 6 * $line-thickness;
-        height: 6 * $line-thickness;
-        background-color: $kai-dark;
-        border-radius: 50% 50%;
+        position:relative;
+        &:before {
+            content:'';
+            position:absolute;
+            left:50%;
+            top:50%;
+            transform: translate3d(-50%, -50%, 0);
+            width: 6 * $line-thickness;
+            height: 6 * $line-thickness;
+            background-color: $kai-dark;
+            border-radius: 50% 50%;
+        }
     }
     &.gbn-Goban_Stone-white {
-        display:block;
-        width: 100%;
-        height: 100%;
         background-color: #eee;
         border-radius: 50% 50%;
     }
     &.gbn-Goban_Stone-black {
-        display:block;
-        width: 100%;
-        height: 100%;
         background-color: #333;
         border-radius: 50% 50%;
     }

@@ -1,4 +1,4 @@
-import { Component, Prop } from '@stencil/core';
+import { Component, Prop, Event, EventEmitter } from '@stencil/core';
 
 @Component({
     tag: 'kaigo-goban',
@@ -8,6 +8,7 @@ import { Component, Prop } from '@stencil/core';
 export class Goban {
     @Prop() size:9|13|19 = 19;
     @Prop() schema:number[] = new Array(Math.pow(this.size, 2)).fill(0);
+    @Event() positionInteraction: EventEmitter;
 
     private boardOuterMargins:string = '10vmin';
     private lineThickness:string = '2px';
@@ -16,6 +17,11 @@ export class Goban {
         13: [42, 48, 84, 120, 126],
         19: [60, 72, 180, 288, 300]
     };
+
+    componentWillLoad() {
+        // hack binded functions
+        this.positionInteractionHandler = this.positionInteractionHandler.bind(this);
+    }
 
     render() {
         return (
@@ -34,11 +40,19 @@ export class Goban {
                         // is black stone
                         if(schemaValue == 1) classes += ' gbn-Goban_Stone-black';
                         
-                        return <span class={ classes }></span>;
+                        return <span tabIndex={ 0 } class={ classes }
+                                onClick={ () => this.positionInteractionHandler('click', index) }
+                                onFocus={ () => this.positionInteractionHandler('hover', index) }
+                                onMouseOver={ () => this.positionInteractionHandler('hover', index) }
+                            ></span>;
                     })}
                 </div>
             </section>
         );
+    }
+
+    positionInteractionHandler(interactionType:'hover'|'click', position1DIndex:number) {
+        this.positionInteraction.emit({ interactionType, position1DIndex });
     }
 
     boardDynamicStyles(size:number):any {

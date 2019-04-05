@@ -1,4 +1,4 @@
-import { Component, Prop, Watch } from '@stencil/core';
+import { Component, Prop, Watch, Listen } from '@stencil/core';
 import WGO from 'wgo';
 
 @Component({
@@ -32,6 +32,11 @@ export class GoGame {
             this.goGame = null;
             this.goGame = new WGO.Game(newValue);
         }
+    }
+
+    @Listen('positionInteraction')
+    gobanInteractionsHandler(event: CustomEvent) {
+        console.log('Received the custom positionInteraction event: ', event.detail);
     }
 
     render() {
