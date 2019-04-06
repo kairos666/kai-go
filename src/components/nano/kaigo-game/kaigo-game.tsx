@@ -55,6 +55,9 @@ export class GoGame {
                 }
             break;
             case BoardEvents.POS_ACTION:
+                // leave early if forbidden move (before updating latest move)
+                if(!this.isValid(eventDetails.position2DIndex.x, eventDetails.position2DIndex.y, this.goGame.turn)) return;
+
                 // update last move BEFORE actually moving to ensure correct registration in stack proxy
                 this.latestMove = {
                     position1DIndex: eventDetails.position1DIndex,
