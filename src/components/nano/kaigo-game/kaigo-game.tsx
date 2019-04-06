@@ -1,5 +1,6 @@
-import { Component, Prop, Watch, Listen } from '@stencil/core';
+import { Component, Prop, Watch, Listen, State } from '@stencil/core';
 import WGO from 'wgo';
+import { BoardEvents } from '../../../global/app';
 
 @Component({
     tag: 'kaigo-game',
@@ -8,21 +9,26 @@ import WGO from 'wgo';
 })
 export class GoGame {
     @Prop() size:9|13|19 = 19;
+    @State() schema:WGO.BLACK|WGO.WHITE|WGO.EMPTY[];
+    @State() positionMoveStatus:{ position1DIndex:number, position2DIndex:{ x:number, y:number }, isValidMove:boolean }|null = null;
+    @State() latestMove:{ position1DIndex:number, position2DIndex:{ x:number, y:number }}|null = null;
     private goGame;
 
     componentWillLoad() {
         this.goGame = new WGO.Game(this.size);
-        console.log(this.addStone(0, 0, WGO.BLACK));
-        console.log(this.play(1, 0, WGO.BLACK));
-        console.log(this.play(2, 0, WGO.WHITE));
-        console.log(this.play(3, 0, WGO.BLACK));
-        console.log(this.play(3, 0, WGO.WHITE));
-        console.log(this.play(2, 1, WGO.BLACK));
-        console.log(this.play(2, 4, WGO.BLACK));
-        this.popPosition();
-        console.log(this.getStone(2, 0));
-        console.log(this.getPosition());
-        console.log(this.goGame);
+        this.schema = this.getPosition().schema;
+
+        // proxy game stack to extend it with last move property
+        this.goGame.stack = new Proxy(this.goGame.stack, {
+            set: (target, prop, receiver) => {
+                // check if setting is a WGO.Position object before acting
+                if(receiver.size) receiver.lastMove = this.latestMove;
+                // apply regular action with eventually modified object
+                Reflect.set( target, prop, receiver );
+
+                return true;
+            }
+        });
     }
 
     @Watch('size')
@@ -31,19 +37,58 @@ export class GoGame {
         if(newValue !== oldValue) {
             this.goGame = null;
             this.goGame = new WGO.Game(newValue);
+            this.schema = this.getPosition().schema;
         }
     }
 
     @Listen('positionInteraction')
     gobanInteractionsHandler(event: CustomEvent) {
-        console.log('Received the custom positionInteraction event: ', event.detail);
+        const eventDetails = event.detail;
+        switch(eventDetails.interactionType) {
+            case BoardEvents.POS_FOCUS:
+                // simulate move and update board cursor
+                const simulatedMoveResult = this.play(eventDetails.position2DIndex.x, eventDetails.position2DIndex.y, this.goGame.turn, true);
+                this.positionMoveStatus = {
+                    position1DIndex: eventDetails.position1DIndex,
+                    position2DIndex: eventDetails.position2DIndex,
+                    isValidMove: (typeof simulatedMoveResult !== 'number')
+                }
+            break;
+            case BoardEvents.POS_ACTION:
+                // leave early if forbidden move (before updating latest move)
+                if(!this.isValid(eventDetails.position2DIndex.x, eventDetails.position2DIndex.y, this.goGame.turn)) return;
+
+                // update last move BEFORE actually moving to ensure correct registration in stack proxy
+                this.latestMove = {
+                    position1DIndex: eventDetails.position1DIndex,
+                    position2DIndex: eventDetails.position2DIndex
+                };
+
+                // play move and update board
+                this.play(eventDetails.position2DIndex.x, eventDetails.position2DIndex.y, this.goGame.turn);
+                this.schema = this.getPosition().schema;
+            break;
+            case BoardEvents.OUT_OF_BOARD:
+                // remove position markers when cursor leaves board
+                this.positionMoveStatus = null;
+            break;
+        }
     }
 
     render() {
         return [
             <p>captured stones: W = { this.getCaptureCount(WGO.WHITE) } / B = { this.getCaptureCount(WGO.BLACK) }</p>,
-            <p>player turn: { (this.goGame.turn == 1) ? 'BLACK' : 'WHITE' }</p>,
-            <kaigo-goban size={ this.size } schema={ this.getPosition().schema }></kaigo-goban>
+            <menu>
+                <button type="button" onClick={ this.popPosition.bind(this) }>undo</button>
+                <button type="button" onClick={ this.firstPosition.bind(this) }>clear game</button>
+            </menu>,
+            <kaigo-goban 
+                size={ this.size } 
+                schema={ this.schema } 
+                cursorState={ this.positionMoveStatus } 
+                latestMove={ this.latestMove }
+                turn={ (this.goGame.turn == WGO.BLACK) ? 'black' : (this.goGame.turn == WGO.WHITE) ? 'white' : null }
+            />
         ];
     }
 
@@ -69,6 +114,11 @@ export class GoGame {
 
     firstPosition():void {
         this.goGame.firstPosition();
+
+        // update last move & schema
+        const undonePosition:Position = this.getPosition();
+        this.latestMove = null;
+        this.schema = undonePosition.schema;
     }
 
     getCaptureCount(color:WGO.BLACK|WGO.WHITE):number {
@@ -92,7 +142,7 @@ export class GoGame {
         return this.goGame.pass(color);
     }
 
-    play(x:number, y:number, c:WGO.BLACK|WGO.WHITE, noplay:boolean = false):{x:number, y:number}[]|1|2|3|4 {
+    play(x:number, y:number, c:WGO.BLACK|WGO.WHITE, noplay:boolean = false):{x:number, y:number}[]|0|1|2|3|4|boolean {
         /**
          * error codes
          * 0 = wrong turn (black tried to played instead of white or reverse)
@@ -123,7 +173,15 @@ export class GoGame {
     }
 
     popPosition():void {
+        // leave early if no stacked positions besides empty board
+        if(this.goGame.stack.length <= 1) return;
+
         this.goGame.popPosition();
+
+        // update last move & schema
+        const undonePosition:Position = this.getPosition();
+        this.latestMove = undonePosition.lastMove;
+        this.schema = undonePosition.schema;
     }
 
     pushPosition(tmp?:Position):void {
@@ -137,5 +195,6 @@ interface Position {
         white: number
     },
     size: number,
-    schema: WGO.BLACK|WGO.WHITE|WGO.EMPTY[]
+    schema: WGO.BLACK|WGO.WHITE|WGO.EMPTY[],
+    lastMove: { position1DIndex:number, position2DIndex:{ x:number, y:number }}|null
 }

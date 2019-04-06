@@ -16,6 +16,9 @@ import {
 
 export namespace Components {
 
+  interface AppGoban {}
+  interface AppGobanAttributes extends StencilHTMLAttributes {}
+
   interface AppHome {}
   interface AppHomeAttributes extends StencilHTMLAttributes {}
 
@@ -28,21 +31,54 @@ export namespace Components {
 
   interface AppRoot {}
   interface AppRootAttributes extends StencilHTMLAttributes {}
+
+  interface KaigoGame {
+    'size': 9|13|19;
+  }
+  interface KaigoGameAttributes extends StencilHTMLAttributes {
+    'size'?: 9|13|19;
+  }
+
+  interface KaigoGoban {
+    'cursorState': { position1DIndex:number, position2DIndex:{ x:number, y:number }, isValidMove:boolean }|null;
+    'latestMove': { position1DIndex:number, position2DIndex:{ x:number, y:number }}|null;
+    'schema': number[];
+    'size': 9|13|19;
+  }
+  interface KaigoGobanAttributes extends StencilHTMLAttributes {
+    'cursorState'?: { position1DIndex:number, position2DIndex:{ x:number, y:number }, isValidMove:boolean }|null;
+    'latestMove'?: { position1DIndex:number, position2DIndex:{ x:number, y:number }}|null;
+    'onPositionInteraction'?: (event: CustomEvent) => void;
+    'schema'?: number[];
+    'size'?: 9|13|19;
+  }
 }
 
 declare global {
   interface StencilElementInterfaces {
+    'AppGoban': Components.AppGoban;
     'AppHome': Components.AppHome;
     'AppProfile': Components.AppProfile;
     'AppRoot': Components.AppRoot;
+    'KaigoGame': Components.KaigoGame;
+    'KaigoGoban': Components.KaigoGoban;
   }
 
   interface StencilIntrinsicElements {
+    'app-goban': Components.AppGobanAttributes;
     'app-home': Components.AppHomeAttributes;
     'app-profile': Components.AppProfileAttributes;
     'app-root': Components.AppRootAttributes;
+    'kaigo-game': Components.KaigoGameAttributes;
+    'kaigo-goban': Components.KaigoGobanAttributes;
   }
 
+
+  interface HTMLAppGobanElement extends Components.AppGoban, HTMLStencilElement {}
+  var HTMLAppGobanElement: {
+    prototype: HTMLAppGobanElement;
+    new (): HTMLAppGobanElement;
+  };
 
   interface HTMLAppHomeElement extends Components.AppHome, HTMLStencilElement {}
   var HTMLAppHomeElement: {
@@ -62,16 +98,34 @@ declare global {
     new (): HTMLAppRootElement;
   };
 
+  interface HTMLKaigoGameElement extends Components.KaigoGame, HTMLStencilElement {}
+  var HTMLKaigoGameElement: {
+    prototype: HTMLKaigoGameElement;
+    new (): HTMLKaigoGameElement;
+  };
+
+  interface HTMLKaigoGobanElement extends Components.KaigoGoban, HTMLStencilElement {}
+  var HTMLKaigoGobanElement: {
+    prototype: HTMLKaigoGobanElement;
+    new (): HTMLKaigoGobanElement;
+  };
+
   interface HTMLElementTagNameMap {
+    'app-goban': HTMLAppGobanElement
     'app-home': HTMLAppHomeElement
     'app-profile': HTMLAppProfileElement
     'app-root': HTMLAppRootElement
+    'kaigo-game': HTMLKaigoGameElement
+    'kaigo-goban': HTMLKaigoGobanElement
   }
 
   interface ElementTagNameMap {
+    'app-goban': HTMLAppGobanElement;
     'app-home': HTMLAppHomeElement;
     'app-profile': HTMLAppProfileElement;
     'app-root': HTMLAppRootElement;
+    'kaigo-game': HTMLKaigoGameElement;
+    'kaigo-goban': HTMLKaigoGobanElement;
   }
 
 
