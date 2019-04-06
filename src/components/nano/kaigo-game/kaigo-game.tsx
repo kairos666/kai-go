@@ -78,9 +78,9 @@ export class GoGame {
     render() {
         return [
             <p>captured stones: W = { this.getCaptureCount(WGO.WHITE) } / B = { this.getCaptureCount(WGO.BLACK) }</p>,
-            <p>player turn: { (this.goGame.turn == 1) ? 'BLACK' : 'WHITE' }</p>,
             <menu>
                 <button type="button" onClick={ this.popPosition.bind(this) }>undo</button>
+                <button type="button" onClick={ this.firstPosition.bind(this) }>clear game</button>
             </menu>,
             <kaigo-goban 
                 size={ this.size } 
@@ -114,6 +114,11 @@ export class GoGame {
 
     firstPosition():void {
         this.goGame.firstPosition();
+
+        // update last move & schema
+        const undonePosition:Position = this.getPosition();
+        this.latestMove = null;
+        this.schema = undonePosition.schema;
     }
 
     getCaptureCount(color:WGO.BLACK|WGO.WHITE):number {
