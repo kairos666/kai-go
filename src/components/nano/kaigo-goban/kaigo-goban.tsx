@@ -1,4 +1,5 @@
 import { Component, Prop, Event, EventEmitter } from '@stencil/core';
+import { BoardEvents, indexConverter } from '../../../global/app';
 
 @Component({
     tag: 'kaigo-goban',
@@ -31,7 +32,7 @@ export class Goban {
                 <div class="gbn-Goban_Board" style={ this.boardDynamicStyles(this.size) }>
                     {new Array(Math.pow(this.size - 1, 2)).fill(0).map(() => <span class="gbn-Goban_BoardCell"></span>)}
                 </div>
-                <div class="gbn-Goban_StonesContainer" style={ this.stoneContainerDynamicStyles(this.size) }>
+                <div class="gbn-Goban_StonesContainer" onMouseLeave={ () => this.positionInteractionHandler(BoardEvents.OUT_OF_BOARD) } style={ this.stoneContainerDynamicStyles(this.size) }>
                     {this.schema.map((schemaValue, index) => {
                         const isStarPoint = this.isStarPoint(index, this.size);
                         const isLatestMove = (this.latestMove && index == this.latestMove.position1DIndex);
@@ -49,9 +50,9 @@ export class Goban {
                         if(!isValidMove) classes += ' gbn-Goban_Stone-forbidden';
                         
                         return <span tabIndex={ 0 } class={ classes }
-                                onClick={ () => this.positionInteractionHandler('click', index) }
-                                onFocus={ () => this.positionInteractionHandler('hover', index) }
-                                onMouseOver={ () => this.positionInteractionHandler('hover', index) }
+                                onClick={ () => this.positionInteractionHandler(BoardEvents.POS_ACTION, index) }
+                                onFocus={ () => this.positionInteractionHandler(BoardEvents.POS_FOCUS, index) }
+                                onMouseOver={ () => this.positionInteractionHandler(BoardEvents.POS_FOCUS, index) }
                             ></span>;
                     })}
                 </div>
@@ -59,19 +60,14 @@ export class Goban {
         );
     }
 
-    positionInteractionHandler(interactionType:'hover'|'click', position1DIndex:number) {
-        const position2DIndex = this.indexConverter(position1DIndex, this.size);
-        this.positionInteraction.emit({ interactionType, position1DIndex, position2DIndex });
-    }
-
-    // convert 1D index to 2D index
-    indexConverter(position:number|{x:number, y:number}, size:number):number|{x:number, y:number} {
-        if(typeof position == 'number') {
-            // from 1D to 2D index
-            return { x: Number(position) % size ,y: Math.floor(Number(position) / size) }
+    positionInteractionHandler(interactionType:BoardEvents.POS_FOCUS|BoardEvents.POS_ACTION|BoardEvents.OUT_OF_BOARD, position1DIndex?:number) {
+        if(interactionType !== 'out-of-board') {
+            // position related board events
+            const position2DIndex = indexConverter(position1DIndex, this.size);
+            this.positionInteraction.emit({ interactionType, position1DIndex, position2DIndex });
         } else {
-            // from 2D to 1D index
-            return (position as any).y * size + (position as any).x;
+            // non position related board events
+            this.positionInteraction.emit({ interactionType });
         }
     }
 
