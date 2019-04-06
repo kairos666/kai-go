@@ -11,6 +11,7 @@ export class Goban {
     @Prop() schema:number[] = new Array(Math.pow(this.size, 2)).fill(0);
     @Prop() cursorState:{ position1DIndex:number, position2DIndex:{ x:number, y:number }, isValidMove:boolean }|null = null;
     @Prop() latestMove:{ position1DIndex:number, position2DIndex:{ x:number, y:number }}|null = null;
+    @Prop() turn:'black'|'white'|null = null;
     @Event() positionInteraction: EventEmitter;
 
     private boardOuterMargins:string = '10vmin';
@@ -32,7 +33,7 @@ export class Goban {
                 <div class="gbn-Goban_Board" style={ this.boardDynamicStyles(this.size) }>
                     {new Array(Math.pow(this.size - 1, 2)).fill(0).map(() => <span class="gbn-Goban_BoardCell"></span>)}
                 </div>
-                <div class="gbn-Goban_StonesContainer" onMouseLeave={ () => this.positionInteractionHandler(BoardEvents.OUT_OF_BOARD) } style={ this.stoneContainerDynamicStyles(this.size) }>
+                <div class={ `gbn-Goban_StonesContainer ${ (this.turn == 'black') ? ' gbn-Goban_StonesContainer-next-black' : (this.turn == 'white') ? ' gbn-Goban_StonesContainer-next-white' : null }` } onMouseLeave={ () => this.positionInteractionHandler(BoardEvents.OUT_OF_BOARD) } style={ this.stoneContainerDynamicStyles(this.size) }>
                     {this.schema.map((schemaValue, index) => {
                         const isStarPoint = this.isStarPoint(index, this.size);
                         const isLatestMove = (this.latestMove && index == this.latestMove.position1DIndex);

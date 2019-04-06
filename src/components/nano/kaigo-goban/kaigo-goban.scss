@@ -1,6 +1,16 @@
 $line-thickness: 2px;
 $board-outer-margins: 10vmin;
 
+@mixin stone-style($color) {
+    background-color: $color;
+    &:before {
+        content:none;
+    }
+    &:focus, &:hover {
+        border-color: transparent;
+    }
+}
+
 // size board in square shape
 .gbn-Goban {
     width: 100vmin;
@@ -56,23 +66,22 @@ $board-outer-margins: 10vmin;
             border-radius: 50% 50%;
         }
     }
-    &.gbn-Goban_Stone-white {
-        background-color: #eee;
-        &:before {
-            content:none;
-        }
-        &:focus, &:hover {
-            border-color: transparent;
-        }
+    .gbn-Goban_StonesContainer-next-black &:hover,
+    .gbn-Goban_StonesContainer-next-black &:focus,
+    .gbn-Goban_StonesContainer-next-black &:active {
+        background-color: rgba($kai-black-stone, .5);
     }
-    &.gbn-Goban_Stone-black {
-        background-color: #333;
-        &:before {
-            content:none;
-        }
-        &:focus, &:hover {
-            border-color: transparent;
-        }
+    .gbn-Goban_StonesContainer-next-white &:hover,
+    .gbn-Goban_StonesContainer-next-white &:focus,
+    .gbn-Goban_StonesContainer-next-white &:active {
+        background-color: rgba($kai-white-stone, .5);
+    }
+    // double class to raise specificity against next-<color> styles
+    &.gbn-Goban_Stone-white.gbn-Goban_Stone-white {
+        @include stone-style($kai-white-stone);
+    }
+    &.gbn-Goban_Stone-black.gbn-Goban_Stone-black {
+        @include stone-style($kai-black-stone);
     }
     &.gbn-Goban_Stone-latest {
         position:relative;

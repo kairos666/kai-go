@@ -82,7 +82,13 @@ export class GoGame {
             <menu>
                 <button type="button" onClick={ this.popPosition.bind(this) }>undo</button>
             </menu>,
-            <kaigo-goban size={ this.size } schema={ this.schema } cursorState={ this.positionMoveStatus } latestMove={ this.latestMove }></kaigo-goban>
+            <kaigo-goban 
+                size={ this.size } 
+                schema={ this.schema } 
+                cursorState={ this.positionMoveStatus } 
+                latestMove={ this.latestMove }
+                turn={ (this.goGame.turn == WGO.BLACK) ? 'black' : (this.goGame.turn == WGO.WHITE) ? 'white' : null }
+            />
         ];
     }
 
