@@ -8,6 +8,8 @@ import { Component, Prop, Event, EventEmitter } from '@stencil/core';
 export class Goban {
     @Prop() size:9|13|19 = 19;
     @Prop() schema:number[] = new Array(Math.pow(this.size, 2)).fill(0);
+    @Prop() cursorState:{ position1DIndex:number, position2DIndex:{ x:number, y:number }, isValidMove:boolean }|null = null;
+    @Prop() latestMove:{ position1DIndex:number, position2DIndex:{ x:number, y:number }}|null = null;
     @Event() positionInteraction: EventEmitter;
 
     private boardOuterMargins:string = '10vmin';
@@ -32,6 +34,8 @@ export class Goban {
                 <div class="gbn-Goban_StonesContainer" style={ this.stoneContainerDynamicStyles(this.size) }>
                     {this.schema.map((schemaValue, index) => {
                         const isStarPoint = this.isStarPoint(index, this.size);
+                        const isLatestMove = (this.latestMove && index == this.latestMove.position1DIndex);
+                        const isValidMove = (this.cursorState && index == this.cursorState.position1DIndex) ? this.cursorState.isValidMove : true;
                         let classes = 'gbn-Goban_Stone';
                         // is star point
                         if(isStarPoint) classes += ' gbn-Goban_Stone-star-point';
@@ -39,6 +43,10 @@ export class Goban {
                         if(schemaValue == -1) classes += ' gbn-Goban_Stone-white';
                         // is black stone
                         if(schemaValue == 1) classes += ' gbn-Goban_Stone-black';
+                        // is latest move
+                        if(isLatestMove) classes += ' gbn-Goban_Stone-latest';
+                        // forbidden move
+                        if(!isValidMove) classes += ' gbn-Goban_Stone-forbidden';
                         
                         return <span tabIndex={ 0 } class={ classes }
                                 onClick={ () => this.positionInteractionHandler('click', index) }
@@ -52,7 +60,19 @@ export class Goban {
     }
 
     positionInteractionHandler(interactionType:'hover'|'click', position1DIndex:number) {
-        this.positionInteraction.emit({ interactionType, position1DIndex });
+        const position2DIndex = this.indexConverter(position1DIndex, this.size);
+        this.positionInteraction.emit({ interactionType, position1DIndex, position2DIndex });
+    }
+
+    // convert 1D index to 2D index
+    indexConverter(position:number|{x:number, y:number}, size:number):number|{x:number, y:number} {
+        if(typeof position == 'number') {
+            // from 1D to 2D index
+            return { x: Number(position) % size ,y: Math.floor(Number(position) / size) }
+        } else {
+            // from 2D to 1D index
+            return (position as any).y * size + (position as any).x;
+        }
     }
 
     boardDynamicStyles(size:number):any {

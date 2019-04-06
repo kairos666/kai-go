@@ -33,10 +33,13 @@ $board-outer-margins: 10vmin;
 
 .gbn-Goban_Stone {
     display:block;
-    width: 100%;
-    height: 100%;
+    width: unquote("calc(100% - #{$line-thickness})");
+    height: unquote("calc(100% - #{$line-thickness})");
+    border-radius: 50% 50%;
+    border: $line-thickness solid transparent;
     &:hover, &:active, &:focus {
-        border: $line-thickness solid $kai-theme-color;
+        border-color: $kai-success;
+        outline: none;
         cursor: pointer;
     }
     &.gbn-Goban_Stone-star-point {
@@ -55,10 +58,40 @@ $board-outer-margins: 10vmin;
     }
     &.gbn-Goban_Stone-white {
         background-color: #eee;
-        border-radius: 50% 50%;
+        &:before {
+            content:none;
+        }
+        &:focus, &:hover {
+            border-color: transparent;
+        }
     }
     &.gbn-Goban_Stone-black {
         background-color: #333;
-        border-radius: 50% 50%;
+        &:before {
+            content:none;
+        }
+        &:focus, &:hover {
+            border-color: transparent;
+        }
+    }
+    &.gbn-Goban_Stone-latest {
+        position:relative;
+        &:after {
+            content:'';
+            position:absolute;
+            left:50%;
+            top:50%;
+            transform: translate3d(-50%, -50%, 0);
+            width: 50%;
+            height: 50%;
+            border:$line-thickness solid $kai-accent;
+            border-radius: 50% 50%;
+        }
+    }
+    &.gbn-Goban_Stone-forbidden {
+        border-color: $kai-danger;
+        &:focus, &:hover {
+            border-color: $kai-danger;
+        }
     }
 }
