@@ -118,6 +118,7 @@ export class GoGame {
         // update last move & schema
         const undonePosition:Position = this.getPosition();
         this.latestMove = null;
+        this.positionMoveStatus = null;
         this.schema = undonePosition.schema;
     }
 
