@@ -45,6 +45,9 @@ export class Stone {
         } else if((oldValue == StoneStates.BLACK || oldValue == StoneStates.WHITE) && (newValue == StoneStates.BLACK_CAPTURE || newValue == StoneStates.WHITE_CAPTURE)) {
             // stone was captured
             this.capturedStoneAnimation();
+        } else {
+            // otherwise just synchronize stone state
+            this._stoneState = (newValue == StoneStates.BLACK_CAPTURE || newValue == StoneStates.WHITE_CAPTURE) ? StoneStates.EMPTY : newValue;
         }
     }
 

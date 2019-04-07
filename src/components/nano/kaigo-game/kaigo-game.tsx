@@ -1,6 +1,6 @@
 import { Component, Prop, Watch, Listen, State } from '@stencil/core';
 import WGO from 'wgo';
-import { BoardEvents, StoneStates } from '../../../global/app';
+import { BoardEvents, StoneStates, indexConverter } from '../../../global/app';
 
 @Component({
     tag: 'kaigo-game',
@@ -16,7 +16,7 @@ export class GoGame {
 
     componentWillLoad() {
         this.goGame = new WGO.Game(this.size);
-        this.schema = this.getPosition().schema;
+        this.schema = this.getPosition().schema as StoneStates[];
 
         // proxy game stack to extend it with last move property
         this.goGame.stack = new Proxy(this.goGame.stack, {
@@ -37,7 +37,7 @@ export class GoGame {
         if(newValue !== oldValue) {
             this.goGame = null;
             this.goGame = new WGO.Game(newValue);
-            this.schema = this.getPosition().schema;
+            this.schema = this.getPosition().schema as StoneStates[];
         }
     }
 
@@ -63,14 +63,33 @@ export class GoGame {
                 };
 
                 // play move and update board
-                this.play(eventDetails.position2DIndex.x, eventDetails.position2DIndex.y, this.goGame.turn);
-                this.schema = this.getPosition().schema;
+                const moveResult = this.play(eventDetails.position2DIndex.x, eventDetails.position2DIndex.y, this.goGame.turn);
+                this.schema = this.extendSchemaAfterMove(this.getPosition().schema, moveResult);
             break;
             case BoardEvents.OUT_OF_BOARD:
                 // remove position markers when cursor leaves board
                 this.positionMoveStatus = null;
             break;
         }
+    }
+
+    private extendSchemaAfterMove(afterMoveSchema:StoneStates.BLACK|StoneStates.WHITE|StoneStates.EMPTY[], moveResult:{x:number, y:number}[]|0|1|2|3|4|boolean):StoneStates[] {
+        // leave early if invalid move or no stones captured
+        if(!Array.isArray(moveResult) || moveResult.length == 0) return afterMoveSchema as StoneStates[];
+
+        // captured stones are always from opponent color
+        const captureState:StoneStates.BLACK_CAPTURE|StoneStates.WHITE_CAPTURE = (this.goGame.turn == StoneStates.BLACK) ? StoneStates.WHITE_CAPTURE : StoneStates.BLACK_CAPTURE;
+        const needExtensions = moveResult.map(index2D => {
+            return indexConverter(index2D, this.size);
+        });
+
+        // clone initial schema and mutate (tus avoiding bugging WGO model)
+        const clonedSchema = (afterMoveSchema as number[]).slice(0);
+        needExtensions.forEach(capturedStone => {
+            clonedSchema[capturedStone as number] = captureState;
+        });
+
+        return clonedSchema as StoneStates[];
     }
 
     render() {
@@ -117,7 +136,7 @@ export class GoGame {
         const undonePosition:Position = this.getPosition();
         this.latestMove = null;
         this.positionMoveStatus = null;
-        this.schema = undonePosition.schema;
+        this.schema = undonePosition.schema as StoneStates[];
     }
 
     getCaptureCount(color:StoneStates.BLACK|StoneStates.WHITE):number {
@@ -180,7 +199,7 @@ export class GoGame {
         // update last move & schema
         const undonePosition:Position = this.getPosition();
         this.latestMove = undonePosition.lastMove;
-        this.schema = undonePosition.schema;
+        this.schema = undonePosition.schema as StoneStates[];
     }
 
     pushPosition(tmp?:Position):void {
@@ -194,6 +213,6 @@ interface Position {
         white: number
     },
     size: number,
-    schema: StoneStates[],
+    schema: StoneStates.BLACK|StoneStates.WHITE|StoneStates.EMPTY[],
     lastMove: { position1DIndex:number, position2DIndex:{ x:number, y:number }}|null
 }

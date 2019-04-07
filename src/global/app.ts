@@ -20,12 +20,12 @@ export const StoneAnimationsConfig = {
         end: { transform: 'translate3D(0, 0, 0)' }
     },
     removeStoneKeyframeStates: {
-        start: { opacity: 1, transform: 'translate3D(0, 0, 0)' },
-        end: { opacity:0, transform: 'translate3D(0, 0, 900px)' }
+        start: { zIndex: 666, opacity: 1, transform: 'translate3D(0, 0, 0)' },
+        end: { zIndex: 666, opacity:0, transform: 'translate3D(0, 0, 900px)' }
     },
     capturedStoneKeyframeStates: {
-        start: { transform: 'translate3D(0, 0, 0)' },
-        end: { transform: 'translate3D(0, 0, 900px)' }
+        start: { zIndex: 666, transform: 'translate3D(0, 0, 0)' },
+        end: { zIndex: 666, transform: 'translate3D(0, 0, 300px)' }
     },
     shockwaveStoneKeyframeStatesBuilder: function(shockWaveAmplitude:number):Keyframe[] {
         return [
