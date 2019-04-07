@@ -29,6 +29,12 @@ export class Stone {
 
     @Watch('stoneState')
     stoneStateChangeHandler(newValue:'black'|'white'|'empty', oldValue:'black'|'white'|'empty'):void {
+        // in case web animation api is not supported
+        if (!this.stoneElt.animate) {
+            this._stoneState = newValue;
+            return;
+        }
+
         if (oldValue == 'empty' && (newValue == 'black' || newValue == 'white')) {
             // new move was played
             this._stoneState = newValue;
@@ -80,6 +86,9 @@ export class Stone {
     }
 
     public applyAnimation(keyframes:Keyframe|Keyframe[], options: number|KeyframeAnimationOptions):Promise<Animation> {
+        // in case web animation api is not supported
+        if (!this.stoneElt.animate) return Promise.reject('Web animation API is not supported');
+
         const animation:Animation = this.stoneElt.animate(keyframes, options);
 
         if (animation.finished) return animation.finished;
