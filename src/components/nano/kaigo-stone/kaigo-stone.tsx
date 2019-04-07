@@ -1,4 +1,4 @@
-import { Component, Prop } from '@stencil/core';
+import { Component, Prop, Watch } from '@stencil/core';
 
 @Component({
     tag: 'kaigo-stone',
@@ -7,7 +7,7 @@ import { Component, Prop } from '@stencil/core';
     scoped: true
 })
 export class Stone {
-    @Prop() stoneState:'black'|'white'|'empty';
+    @Prop() stoneState:'black'|'white'|'empty' = 'empty';
     @Prop() isStarPoint:boolean;
     @Prop() isLatestMove:boolean;
     @Prop() isForbiddenMove:boolean;
@@ -17,6 +17,22 @@ export class Stone {
             'tabIndex': 0,
             'class': this.stoneClassesBuilder()
         };
+    }
+
+    componentDidLoad() {
+        // initial stone state solving
+        this.stoneStateChangeHandler(this.stoneState, 'empty');
+    }
+
+    @Watch('stoneState')
+    stoneStateChangeHandler(newValue:'black'|'white'|'empty', oldValue:'black'|'white'|'empty'):void {
+        if (oldValue == 'empty' && (newValue == 'black' || newValue == 'white')) {
+            // new move was played
+            console.log('played stone');
+        } else if((oldValue == 'black' || oldValue == 'white') && newValue == 'empty') {
+            // stone was captured or removed from board (ex: undo)
+            console.log('captured or removed stone');
+        }
     }
 
     stoneClassesBuilder():string {
