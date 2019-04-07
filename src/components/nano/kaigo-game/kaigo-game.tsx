@@ -1,6 +1,6 @@
 import { Component, Prop, Watch, Listen, State } from '@stencil/core';
 import WGO from 'wgo';
-import { BoardEvents } from '../../../global/app';
+import { BoardEvents, StoneStates, indexConverter } from '../../../global/app';
 
 @Component({
     tag: 'kaigo-game',
@@ -9,14 +9,14 @@ import { BoardEvents } from '../../../global/app';
 })
 export class GoGame {
     @Prop() size:9|13|19 = 19;
-    @State() schema:WGO.BLACK|WGO.WHITE|WGO.EMPTY[];
+    @State() schema:StoneStates[];
     @State() positionMoveStatus:{ position1DIndex:number, position2DIndex:{ x:number, y:number }, isValidMove:boolean }|null = null;
     @State() latestMove:{ position1DIndex:number, position2DIndex:{ x:number, y:number }}|null = null;
     private goGame;
 
     componentWillLoad() {
         this.goGame = new WGO.Game(this.size);
-        this.schema = this.getPosition().schema;
+        this.schema = this.getPosition().schema as StoneStates[];
 
         // proxy game stack to extend it with last move property
         this.goGame.stack = new Proxy(this.goGame.stack, {
@@ -37,7 +37,7 @@ export class GoGame {
         if(newValue !== oldValue) {
             this.goGame = null;
             this.goGame = new WGO.Game(newValue);
-            this.schema = this.getPosition().schema;
+            this.schema = this.getPosition().schema as StoneStates[];
         }
     }
 
@@ -46,12 +46,10 @@ export class GoGame {
         const eventDetails = event.detail;
         switch(eventDetails.interactionType) {
             case BoardEvents.POS_FOCUS:
-                // simulate move and update board cursor
-                const simulatedMoveResult = this.play(eventDetails.position2DIndex.x, eventDetails.position2DIndex.y, this.goGame.turn, true);
                 this.positionMoveStatus = {
                     position1DIndex: eventDetails.position1DIndex,
                     position2DIndex: eventDetails.position2DIndex,
-                    isValidMove: (typeof simulatedMoveResult !== 'number')
+                    isValidMove: this.isValid(eventDetails.position2DIndex.x, eventDetails.position2DIndex.y, this.goGame.turn)
                 }
             break;
             case BoardEvents.POS_ACTION:
@@ -65,8 +63,8 @@ export class GoGame {
                 };
 
                 // play move and update board
-                this.play(eventDetails.position2DIndex.x, eventDetails.position2DIndex.y, this.goGame.turn);
-                this.schema = this.getPosition().schema;
+                const moveResult = this.play(eventDetails.position2DIndex.x, eventDetails.position2DIndex.y, this.goGame.turn);
+                this.schema = this.extendSchemaAfterMove(this.getPosition().schema, moveResult);
             break;
             case BoardEvents.OUT_OF_BOARD:
                 // remove position markers when cursor leaves board
@@ -75,9 +73,28 @@ export class GoGame {
         }
     }
 
+    private extendSchemaAfterMove(afterMoveSchema:StoneStates.BLACK|StoneStates.WHITE|StoneStates.EMPTY[], moveResult:{x:number, y:number}[]|0|1|2|3|4|boolean):StoneStates[] {
+        // leave early if invalid move or no stones captured
+        if(!Array.isArray(moveResult) || moveResult.length == 0) return afterMoveSchema as StoneStates[];
+
+        // captured stones are always from opponent color
+        const captureState:StoneStates.BLACK_CAPTURE|StoneStates.WHITE_CAPTURE = (this.goGame.turn == StoneStates.BLACK) ? StoneStates.WHITE_CAPTURE : StoneStates.BLACK_CAPTURE;
+        const needExtensions = moveResult.map(index2D => {
+            return indexConverter(index2D, this.size);
+        });
+
+        // clone initial schema and mutate (tus avoiding bugging WGO model)
+        const clonedSchema = (afterMoveSchema as number[]).slice(0);
+        needExtensions.forEach(capturedStone => {
+            clonedSchema[capturedStone as number] = captureState;
+        });
+
+        return clonedSchema as StoneStates[];
+    }
+
     render() {
         return [
-            <p>captured stones: W = { this.getCaptureCount(WGO.WHITE) } / B = { this.getCaptureCount(WGO.BLACK) }</p>,
+            <p>captured stones: W = { this.getCaptureCount(StoneStates.WHITE) } / B = { this.getCaptureCount(StoneStates.BLACK) }</p>,
             <menu>
                 <button type="button" onClick={ this.popPosition.bind(this) }>undo</button>
                 <button type="button" onClick={ this.firstPosition.bind(this) }>clear game</button>
@@ -87,13 +104,13 @@ export class GoGame {
                 schema={ this.schema } 
                 cursorState={ this.positionMoveStatus } 
                 latestMove={ this.latestMove }
-                turn={ (this.goGame.turn == WGO.BLACK) ? 'black' : (this.goGame.turn == WGO.WHITE) ? 'white' : null }
+                turn={ this.goGame.turn }
             />
         ];
     }
 
     // replicate WGO methods (http://waltheri.github.io/wgo.js/Game.html)
-    addStone(x:number, y:number, c:WGO.BLACK|WGO.WHITE):boolean {
+    addStone(x:number, y:number, c:StoneStates.BLACK|StoneStates.WHITE):boolean {
         // /!\ reversed axis
         return this.goGame.addStone(y, x, c);
     }
@@ -103,11 +120,11 @@ export class GoGame {
         return this.goGame.removeStone(y, x);
     }
 
-    getStone(x:number, y:number):WGO.BLACK|WGO.WHITE|null {
+    getStone(x:number, y:number):StoneStates.BLACK|StoneStates.WHITE|null {
         return this.goGame.getStone(y, x);
     }
 
-    setStone(x:number, y:number, c:WGO.BLACK|WGO.WHITE):boolean {
+    setStone(x:number, y:number, c:StoneStates.BLACK|StoneStates.WHITE):boolean {
         // /!\ reversed axis
         return this.goGame.setStone(y, x, c);
     }
@@ -118,10 +135,11 @@ export class GoGame {
         // update last move & schema
         const undonePosition:Position = this.getPosition();
         this.latestMove = null;
-        this.schema = undonePosition.schema;
+        this.positionMoveStatus = null;
+        this.schema = undonePosition.schema as StoneStates[];
     }
 
-    getCaptureCount(color:WGO.BLACK|WGO.WHITE):number {
+    getCaptureCount(color:StoneStates.BLACK|StoneStates.WHITE):number {
         return this.goGame.getCaptureCount(color);
     }
 
@@ -133,16 +151,16 @@ export class GoGame {
         return this.goGame.isOnBoard(y, x);
     }
 
-    isValid(x:number, y:number, c:WGO.BLACK|WGO.WHITE):boolean {
+    isValid(x:number, y:number, c:StoneStates.BLACK|StoneStates.WHITE):boolean {
         // /!\ reversed axis
         return this.goGame.isValid(y, x, c);
     }
 
-    pass(color:WGO.BLACK|WGO.WHITE):number {
+    pass(color:StoneStates.BLACK|StoneStates.WHITE):number {
         return this.goGame.pass(color);
     }
 
-    play(x:number, y:number, c:WGO.BLACK|WGO.WHITE, noplay:boolean = false):{x:number, y:number}[]|0|1|2|3|4|boolean {
+    play(x:number, y:number, c:StoneStates.BLACK|StoneStates.WHITE, noplay:boolean = false):{x:number, y:number}[]|0|1|2|3|4|boolean {
         /**
          * error codes
          * 0 = wrong turn (black tried to played instead of white or reverse)
@@ -181,7 +199,7 @@ export class GoGame {
         // update last move & schema
         const undonePosition:Position = this.getPosition();
         this.latestMove = undonePosition.lastMove;
-        this.schema = undonePosition.schema;
+        this.schema = undonePosition.schema as StoneStates[];
     }
 
     pushPosition(tmp?:Position):void {
@@ -195,6 +213,6 @@ interface Position {
         white: number
     },
     size: number,
-    schema: WGO.BLACK|WGO.WHITE|WGO.EMPTY[],
+    schema: StoneStates.BLACK|StoneStates.WHITE|StoneStates.EMPTY[],
     lastMove: { position1DIndex:number, position2DIndex:{ x:number, y:number }}|null
 }

@@ -4,6 +4,38 @@ export enum BoardEvents {
     OUT_OF_BOARD = 'out-of-board'
 }
 
+// replicate WGO states + captured states
+export enum StoneStates {
+    WHITE = -1,
+    BLACK = 1,
+    EMPTY = 0,
+    WHITE_CAPTURE = -2,
+    BLACK_CAPTURE = 2
+}
+
+export const StoneAnimationsConfig = {
+    standardMoveAnimationDuration: 250, // ms
+    addStonesKeyframeStates: {
+        start: { transform: 'translate3D(0, 0, 900px)' },
+        end: { transform: 'translate3D(0, 0, 0)' }
+    },
+    removeStoneKeyframeStates: {
+        start: { zIndex: 666, opacity: 1, transform: 'translate3D(0, 0, 0)' },
+        end: { zIndex: 666, opacity:0, transform: 'translate3D(0, 0, 900px)' }
+    },
+    capturedStoneKeyframeStates: {
+        start: { zIndex: 666, transform: 'translate3D(0, 0, 0)' },
+        end: { zIndex: 666, transform: 'translate3D(0, 0, 300px)' }
+    },
+    shockwaveStoneKeyframeStatesBuilder: function(shockWaveAmplitude:number):Keyframe[] {
+        return [
+            { transform: 'translate3D(0, 0, 0)' },
+            { transform: `translate3D(0, 0, ${ 900 * shockWaveAmplitude }px)` },
+            { transform: 'translate3D(0, 0, 0)' }
+        ]
+    }
+}
+
 // convert 1D index to 2D index
 export function indexConverter(position:number|{x:number, y:number}, size:number):number|{x:number, y:number} {
     if(typeof position == 'number') {

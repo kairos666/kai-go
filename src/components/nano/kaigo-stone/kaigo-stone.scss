@@ -1,0 +1,76 @@
+@mixin stone-style($color) {
+    background-color: $color;
+    &:before {
+        content:none;
+    }
+    &:focus, &:hover {
+        border-color: transparent;
+    }
+}
+
+:host {
+    display:block;
+    width: unquote("calc(100% - #{$line-thickness})");
+    height: unquote("calc(100% - #{$line-thickness})");
+    border-radius: 50% 50%;
+    border: $line-thickness solid transparent;
+    &:hover, &:active, &:focus {
+        border-color: $kai-success;
+        outline: none;
+        cursor: pointer;
+    }
+    &[is-star-point] {
+        position:relative;
+        &:before {
+            content:'';
+            position:absolute;
+            left:50%;
+            top:50%;
+            transform: translate3d(-50%, -50%, 0);
+            width: 6 * $line-thickness;
+            height: 6 * $line-thickness;
+            background-color: $kai-dark;
+            border-radius: 50% 50%;
+        }
+    }
+    // /!\ stone container is parent goban component
+    .gbn-Goban_StonesContainer-next-black &:hover,
+    .gbn-Goban_StonesContainer-next-black &:focus,
+    .gbn-Goban_StonesContainer-next-black &:active {
+        background-color: rgba($kai-black-stone, .5);
+    }
+    .gbn-Goban_StonesContainer-next-white &:hover,
+    .gbn-Goban_StonesContainer-next-white &:focus,
+    .gbn-Goban_StonesContainer-next-white &:active {
+        background-color: rgba($kai-white-stone, .5);
+    }
+    // double class to raise specificity against next-<color> styles
+    &.gbn-Goban_Stone-white.gbn-Goban_Stone-white {
+        @include stone-style($kai-white-stone);
+    }
+    &.gbn-Goban_Stone-black.gbn-Goban_Stone-black {
+        @include stone-style($kai-black-stone);
+    }
+    &[is-latest-move] {
+        position:relative;
+        &:after {
+            content:'';
+            position:absolute;
+            left:50%;
+            top:50%;
+            transform: translate3d(-50%, -50%, 0);
+            width: 50%;
+            height: 50%;
+            border:$line-thickness solid $kai-accent;
+            border-radius: 50% 50%;
+        }
+    }
+    &[is-forbidden-move],
+    &.gbn-Goban_Stone-black[is-forbidden-move],
+    &.gbn-Goban_Stone-white[is-forbidden-move] {
+        border-color: $kai-danger;
+        &:focus, &:hover {
+            border-color: $kai-danger;
+        }
+    }
+}

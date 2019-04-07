@@ -12,6 +12,9 @@ import '@stencil/state-tunnel';
 import {
   MatchResults,
 } from '@stencil/router';
+import {
+  StoneStates,
+} from './global/app';
 
 
 export namespace Components {
@@ -42,15 +45,30 @@ export namespace Components {
   interface KaigoGoban {
     'cursorState': { position1DIndex:number, position2DIndex:{ x:number, y:number }, isValidMove:boolean }|null;
     'latestMove': { position1DIndex:number, position2DIndex:{ x:number, y:number }}|null;
-    'schema': number[];
+    'schema': StoneStates[];
     'size': 9|13|19;
+    'turn': StoneStates.BLACK|StoneStates.WHITE|null;
   }
   interface KaigoGobanAttributes extends StencilHTMLAttributes {
     'cursorState'?: { position1DIndex:number, position2DIndex:{ x:number, y:number }, isValidMove:boolean }|null;
     'latestMove'?: { position1DIndex:number, position2DIndex:{ x:number, y:number }}|null;
     'onPositionInteraction'?: (event: CustomEvent) => void;
-    'schema'?: number[];
+    'schema'?: StoneStates[];
     'size'?: 9|13|19;
+    'turn'?: StoneStates.BLACK|StoneStates.WHITE|null;
+  }
+
+  interface KaigoStone {
+    'isForbiddenMove': boolean;
+    'isLatestMove': boolean;
+    'isStarPoint': boolean;
+    'stoneState': StoneStates;
+  }
+  interface KaigoStoneAttributes extends StencilHTMLAttributes {
+    'isForbiddenMove'?: boolean;
+    'isLatestMove'?: boolean;
+    'isStarPoint'?: boolean;
+    'stoneState'?: StoneStates;
   }
 }
 
@@ -62,6 +80,7 @@ declare global {
     'AppRoot': Components.AppRoot;
     'KaigoGame': Components.KaigoGame;
     'KaigoGoban': Components.KaigoGoban;
+    'KaigoStone': Components.KaigoStone;
   }
 
   interface StencilIntrinsicElements {
@@ -71,6 +90,7 @@ declare global {
     'app-root': Components.AppRootAttributes;
     'kaigo-game': Components.KaigoGameAttributes;
     'kaigo-goban': Components.KaigoGobanAttributes;
+    'kaigo-stone': Components.KaigoStoneAttributes;
   }
 
 
@@ -110,6 +130,12 @@ declare global {
     new (): HTMLKaigoGobanElement;
   };
 
+  interface HTMLKaigoStoneElement extends Components.KaigoStone, HTMLStencilElement {}
+  var HTMLKaigoStoneElement: {
+    prototype: HTMLKaigoStoneElement;
+    new (): HTMLKaigoStoneElement;
+  };
+
   interface HTMLElementTagNameMap {
     'app-goban': HTMLAppGobanElement
     'app-home': HTMLAppHomeElement
@@ -117,6 +143,7 @@ declare global {
     'app-root': HTMLAppRootElement
     'kaigo-game': HTMLKaigoGameElement
     'kaigo-goban': HTMLKaigoGobanElement
+    'kaigo-stone': HTMLKaigoStoneElement
   }
 
   interface ElementTagNameMap {
@@ -126,6 +153,7 @@ declare global {
     'app-root': HTMLAppRootElement;
     'kaigo-game': HTMLKaigoGameElement;
     'kaigo-goban': HTMLKaigoGobanElement;
+    'kaigo-stone': HTMLKaigoStoneElement;
   }
 
 
