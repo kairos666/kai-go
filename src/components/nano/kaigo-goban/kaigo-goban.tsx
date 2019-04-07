@@ -1,5 +1,5 @@
 import { Component, Prop, Event, EventEmitter } from '@stencil/core';
-import { BoardEvents, indexConverter } from '../../../global/app';
+import { BoardEvents, indexConverter, StoneStates } from '../../../global/app';
 
 @Component({
     tag: 'kaigo-goban',
@@ -8,10 +8,10 @@ import { BoardEvents, indexConverter } from '../../../global/app';
 })
 export class Goban {
     @Prop() size:9|13|19 = 19;
-    @Prop() schema:number[] = new Array(Math.pow(this.size, 2)).fill(0);
+    @Prop() schema:StoneStates[] = new Array(Math.pow(this.size, 2)).fill(0);
     @Prop() cursorState:{ position1DIndex:number, position2DIndex:{ x:number, y:number }, isValidMove:boolean }|null = null;
     @Prop() latestMove:{ position1DIndex:number, position2DIndex:{ x:number, y:number }}|null = null;
-    @Prop() turn:'black'|'white'|null = null;
+    @Prop() turn:StoneStates.BLACK|StoneStates.WHITE|null = null;
     @Event() positionInteraction: EventEmitter;
 
     private boardOuterMargins:string = '10vmin';
@@ -33,13 +33,13 @@ export class Goban {
                 <div class="gbn-Goban_Board" style={ this.boardDynamicStyles(this.size) }>
                     {new Array(Math.pow(this.size - 1, 2)).fill(0).map(() => <span class="gbn-Goban_BoardCell"></span>)}
                 </div>
-                <div class={ `gbn-Goban_StonesContainer ${ (this.turn == 'black') ? ' gbn-Goban_StonesContainer-next-black' : (this.turn == 'white') ? ' gbn-Goban_StonesContainer-next-white' : null }` } onMouseLeave={ () => this.positionInteractionHandler(BoardEvents.OUT_OF_BOARD) } style={ this.stoneContainerDynamicStyles(this.size) }>
+                <div class={ `gbn-Goban_StonesContainer ${ (this.turn == StoneStates.BLACK) ? ' gbn-Goban_StonesContainer-next-black' : (this.turn == StoneStates.WHITE) ? ' gbn-Goban_StonesContainer-next-white' : null }` } onMouseLeave={ () => this.positionInteractionHandler(BoardEvents.OUT_OF_BOARD) } style={ this.stoneContainerDynamicStyles(this.size) }>
                     {this.schema.map((schemaValue, index) => {
                         const stoneProps = {
                             'is-star-point': this.isStarPoint(index, this.size),
                             'is-latest-move': (this.latestMove && index == this.latestMove.position1DIndex),
                             'is-forbidden-move': (this.cursorState && index == this.cursorState.position1DIndex) ? !this.cursorState.isValidMove : false,
-                            'stone-state': (schemaValue == -1) ? 'white' : (schemaValue == 1) ? 'black' : 'empty'
+                            'stone-state': schemaValue
                         }
                         
                         return <kaigo-stone

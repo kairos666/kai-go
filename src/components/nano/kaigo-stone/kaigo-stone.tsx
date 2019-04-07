@@ -1,5 +1,5 @@
 import { Component, Prop, Watch, Element, State } from '@stencil/core';
-import { StoneAnimationsConfig } from '../../../global/app';
+import { StoneAnimationsConfig, StoneStates } from '../../../global/app';
 
 @Component({
     tag: 'kaigo-stone',
@@ -9,11 +9,11 @@ import { StoneAnimationsConfig } from '../../../global/app';
 })
 export class Stone {
     @Element() stoneElt:HTMLElement;
-    @Prop() stoneState:'black'|'white'|'empty' = 'empty';
+    @Prop() stoneState:StoneStates = StoneStates.EMPTY;
     @Prop() isStarPoint:boolean;
     @Prop() isLatestMove:boolean;
     @Prop() isForbiddenMove:boolean;
-    @State() _stoneState:'black'|'white'|'empty' = 'empty';
+    @State() _stoneState:StoneStates.BLACK|StoneStates.WHITE|StoneStates.EMPTY = StoneStates.EMPTY;
 
     hostData() {
         return { 
@@ -24,24 +24,27 @@ export class Stone {
 
     componentDidLoad() {
         // initial stone state solving
-        this.stoneStateChangeHandler(this.stoneState, 'empty');
+        this.stoneStateChangeHandler(this.stoneState, StoneStates.EMPTY);
     }
 
     @Watch('stoneState')
-    stoneStateChangeHandler(newValue:'black'|'white'|'empty', oldValue:'black'|'white'|'empty'):void {
+    stoneStateChangeHandler(newValue:StoneStates, oldValue:StoneStates):void {
         // in case web animation api is not supported
         if (!this.stoneElt.animate) {
-            this._stoneState = newValue;
+            this._stoneState = (newValue == StoneStates.BLACK_CAPTURE || newValue == StoneStates.WHITE_CAPTURE) ? StoneStates.EMPTY : newValue;
             return;
         }
 
-        if (oldValue == 'empty' && (newValue == 'black' || newValue == 'white')) {
+        if (oldValue == StoneStates.EMPTY && (newValue == StoneStates.BLACK || newValue == StoneStates.WHITE)) {
             // new move was played
             this._stoneState = newValue;
             this.playedStoneAnimation();
-        } else if((oldValue == 'black' || oldValue == 'white') && newValue == 'empty') {
-            // stone was captured or removed from board (ex: undo)
+        } else if((oldValue == StoneStates.BLACK || oldValue == StoneStates.WHITE) && newValue == StoneStates.EMPTY) {
+            // stone was removed from board (ex: undo)
             this.removedStoneAnimation();
+        } else if((oldValue == StoneStates.BLACK || oldValue == StoneStates.WHITE) && (newValue == StoneStates.BLACK_CAPTURE || newValue == StoneStates.WHITE_CAPTURE)) {
+            // stone was captured
+            this.capturedStoneAnimation();
         }
     }
 
@@ -50,14 +53,14 @@ export class Stone {
         let classes = 'gbn-Goban_Stone';
         
         // is white stone
-        if(this._stoneState == 'white') classes += ' gbn-Goban_Stone-white';
+        if(this._stoneState == StoneStates.WHITE) classes += ' gbn-Goban_Stone-white';
         // is black stone
-        if(this._stoneState == 'black') classes += ' gbn-Goban_Stone-black';
+        if(this._stoneState == StoneStates.BLACK) classes += ' gbn-Goban_Stone-black';
 
         return classes;
     }
 
-    playedStoneAnimation() {
+    private playedStoneAnimation() {
         const keyframes:Keyframe[] = [
             StoneAnimationsConfig.addStonesKeyframeStates.start,
             StoneAnimationsConfig.addStonesKeyframeStates.end
@@ -69,10 +72,25 @@ export class Stone {
         this.applyAnimation(keyframes, options);
     }
 
-    removedStoneAnimation() {
+    private removedStoneAnimation() {
         const keyframes:Keyframe[] = [
             StoneAnimationsConfig.removeStoneKeyframeStates.start,
             StoneAnimationsConfig.removeStoneKeyframeStates.end
+        ]
+        const options:KeyframeAnimationOptions = {
+                duration: StoneAnimationsConfig.standardMoveAnimationDuration,
+                easing: 'ease-out'
+        };
+        this.applyAnimation(keyframes, options).then(() => {
+            // after animation is finished update stone state
+            this._stoneState = StoneStates.EMPTY;
+        });
+    }
+
+    private capturedStoneAnimation() {
+        const keyframes:Keyframe[] = [
+            StoneAnimationsConfig.capturedStoneKeyframeStates.start,
+            StoneAnimationsConfig.capturedStoneKeyframeStates.end
         ]
         const options:KeyframeAnimationOptions = {
                 duration: StoneAnimationsConfig.standardMoveAnimationDuration,
@@ -81,7 +99,7 @@ export class Stone {
         };
         this.applyAnimation(keyframes, options).then(() => {
             // after animation is finished update stone state
-            this._stoneState = 'empty';
+            this._stoneState = StoneStates.EMPTY;
         });
     }
 

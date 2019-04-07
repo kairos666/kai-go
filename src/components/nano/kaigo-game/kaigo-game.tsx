@@ -1,6 +1,6 @@
 import { Component, Prop, Watch, Listen, State } from '@stencil/core';
 import WGO from 'wgo';
-import { BoardEvents } from '../../../global/app';
+import { BoardEvents, StoneStates } from '../../../global/app';
 
 @Component({
     tag: 'kaigo-game',
@@ -9,7 +9,7 @@ import { BoardEvents } from '../../../global/app';
 })
 export class GoGame {
     @Prop() size:9|13|19 = 19;
-    @State() schema:WGO.BLACK|WGO.WHITE|WGO.EMPTY[];
+    @State() schema:StoneStates[];
     @State() positionMoveStatus:{ position1DIndex:number, position2DIndex:{ x:number, y:number }, isValidMove:boolean }|null = null;
     @State() latestMove:{ position1DIndex:number, position2DIndex:{ x:number, y:number }}|null = null;
     private goGame;
@@ -75,7 +75,7 @@ export class GoGame {
 
     render() {
         return [
-            <p>captured stones: W = { this.getCaptureCount(WGO.WHITE) } / B = { this.getCaptureCount(WGO.BLACK) }</p>,
+            <p>captured stones: W = { this.getCaptureCount(StoneStates.WHITE) } / B = { this.getCaptureCount(StoneStates.BLACK) }</p>,
             <menu>
                 <button type="button" onClick={ this.popPosition.bind(this) }>undo</button>
                 <button type="button" onClick={ this.firstPosition.bind(this) }>clear game</button>
@@ -85,13 +85,13 @@ export class GoGame {
                 schema={ this.schema } 
                 cursorState={ this.positionMoveStatus } 
                 latestMove={ this.latestMove }
-                turn={ (this.goGame.turn == WGO.BLACK) ? 'black' : (this.goGame.turn == WGO.WHITE) ? 'white' : null }
+                turn={ this.goGame.turn }
             />
         ];
     }
 
     // replicate WGO methods (http://waltheri.github.io/wgo.js/Game.html)
-    addStone(x:number, y:number, c:WGO.BLACK|WGO.WHITE):boolean {
+    addStone(x:number, y:number, c:StoneStates.BLACK|StoneStates.WHITE):boolean {
         // /!\ reversed axis
         return this.goGame.addStone(y, x, c);
     }
@@ -101,11 +101,11 @@ export class GoGame {
         return this.goGame.removeStone(y, x);
     }
 
-    getStone(x:number, y:number):WGO.BLACK|WGO.WHITE|null {
+    getStone(x:number, y:number):StoneStates.BLACK|StoneStates.WHITE|null {
         return this.goGame.getStone(y, x);
     }
 
-    setStone(x:number, y:number, c:WGO.BLACK|WGO.WHITE):boolean {
+    setStone(x:number, y:number, c:StoneStates.BLACK|StoneStates.WHITE):boolean {
         // /!\ reversed axis
         return this.goGame.setStone(y, x, c);
     }
@@ -120,7 +120,7 @@ export class GoGame {
         this.schema = undonePosition.schema;
     }
 
-    getCaptureCount(color:WGO.BLACK|WGO.WHITE):number {
+    getCaptureCount(color:StoneStates.BLACK|StoneStates.WHITE):number {
         return this.goGame.getCaptureCount(color);
     }
 
@@ -132,16 +132,16 @@ export class GoGame {
         return this.goGame.isOnBoard(y, x);
     }
 
-    isValid(x:number, y:number, c:WGO.BLACK|WGO.WHITE):boolean {
+    isValid(x:number, y:number, c:StoneStates.BLACK|StoneStates.WHITE):boolean {
         // /!\ reversed axis
         return this.goGame.isValid(y, x, c);
     }
 
-    pass(color:WGO.BLACK|WGO.WHITE):number {
+    pass(color:StoneStates.BLACK|StoneStates.WHITE):number {
         return this.goGame.pass(color);
     }
 
-    play(x:number, y:number, c:WGO.BLACK|WGO.WHITE, noplay:boolean = false):{x:number, y:number}[]|0|1|2|3|4|boolean {
+    play(x:number, y:number, c:StoneStates.BLACK|StoneStates.WHITE, noplay:boolean = false):{x:number, y:number}[]|0|1|2|3|4|boolean {
         /**
          * error codes
          * 0 = wrong turn (black tried to played instead of white or reverse)
@@ -194,6 +194,6 @@ interface Position {
         white: number
     },
     size: number,
-    schema: WGO.BLACK|WGO.WHITE|WGO.EMPTY[],
+    schema: StoneStates[],
     lastMove: { position1DIndex:number, position2DIndex:{ x:number, y:number }}|null
 }

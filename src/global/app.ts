@@ -4,6 +4,15 @@ export enum BoardEvents {
     OUT_OF_BOARD = 'out-of-board'
 }
 
+// replicate WGO states + captured states
+export enum StoneStates {
+    WHITE = -1,
+    BLACK = 1,
+    EMPTY = 0,
+    WHITE_CAPTURE = -2,
+    BLACK_CAPTURE = 2
+}
+
 export const StoneAnimationsConfig = {
     standardMoveAnimationDuration: 250, // ms
     addStonesKeyframeStates: {
