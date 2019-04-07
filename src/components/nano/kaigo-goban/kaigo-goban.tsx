@@ -35,26 +35,19 @@ export class Goban {
                 </div>
                 <div class={ `gbn-Goban_StonesContainer ${ (this.turn == 'black') ? ' gbn-Goban_StonesContainer-next-black' : (this.turn == 'white') ? ' gbn-Goban_StonesContainer-next-white' : null }` } onMouseLeave={ () => this.positionInteractionHandler(BoardEvents.OUT_OF_BOARD) } style={ this.stoneContainerDynamicStyles(this.size) }>
                     {this.schema.map((schemaValue, index) => {
-                        const isStarPoint = this.isStarPoint(index, this.size);
-                        const isLatestMove = (this.latestMove && index == this.latestMove.position1DIndex);
-                        const isValidMove = (this.cursorState && index == this.cursorState.position1DIndex) ? this.cursorState.isValidMove : true;
-                        let classes = 'gbn-Goban_Stone';
-                        // is star point
-                        if(isStarPoint) classes += ' gbn-Goban_Stone-star-point';
-                        // is white stone
-                        if(schemaValue == -1) classes += ' gbn-Goban_Stone-white';
-                        // is black stone
-                        if(schemaValue == 1) classes += ' gbn-Goban_Stone-black';
-                        // is latest move
-                        if(isLatestMove) classes += ' gbn-Goban_Stone-latest';
-                        // forbidden move
-                        if(!isValidMove) classes += ' gbn-Goban_Stone-forbidden';
+                        const stoneProps = {
+                            'is-star-point': this.isStarPoint(index, this.size),
+                            'is-latest-move': (this.latestMove && index == this.latestMove.position1DIndex),
+                            'is-forbidden-move': (this.cursorState && index == this.cursorState.position1DIndex) ? !this.cursorState.isValidMove : false,
+                            'stone-state': (schemaValue == -1) ? 'white' : (schemaValue == 1) ? 'black' : 'empty'
+                        }
                         
-                        return <span tabIndex={ 0 } class={ classes }
+                        return <kaigo-stone
+                                {...stoneProps}
                                 onClick={ () => this.positionInteractionHandler(BoardEvents.POS_ACTION, index) }
                                 onFocus={ () => this.positionInteractionHandler(BoardEvents.POS_FOCUS, index) }
                                 onMouseOver={ () => this.positionInteractionHandler(BoardEvents.POS_FOCUS, index) }
-                            ></span>;
+                            />;
                     })}
                 </div>
             </section>
