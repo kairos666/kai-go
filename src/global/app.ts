@@ -4,6 +4,29 @@ export enum BoardEvents {
     OUT_OF_BOARD = 'out-of-board'
 }
 
+export const StoneAnimationsConfig = {
+    standardMoveAnimationDuration: 250, // ms
+    addStonesKeyframeStates: {
+        start: { transform: 'translate3D(0, 0, 900px)' },
+        end: { transform: 'translate3D(0, 0, 0)' }
+    },
+    removeStoneKeyframeStates: {
+        start: { opacity: 1, transform: 'translate3D(0, 0, 0)' },
+        end: { opacity:0, transform: 'translate3D(0, 0, 900px)' }
+    },
+    capturedStoneKeyframeStates: {
+        start: { transform: 'translate3D(0, 0, 0)' },
+        end: { transform: 'translate3D(0, 0, 900px)' }
+    },
+    shockwaveStoneKeyframeStatesBuilder: function(shockWaveAmplitude:number):Keyframe[] {
+        return [
+            { transform: 'translate3D(0, 0, 0)' },
+            { transform: `translate3D(0, 0, ${ 900 * shockWaveAmplitude }px)` },
+            { transform: 'translate3D(0, 0, 0)' }
+        ]
+    }
+}
+
 // convert 1D index to 2D index
 export function indexConverter(position:number|{x:number, y:number}, size:number):number|{x:number, y:number} {
     if(typeof position == 'number') {

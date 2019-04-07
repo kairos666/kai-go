@@ -1,4 +1,5 @@
 import { Component, Prop, Watch, Element, State } from '@stencil/core';
+import { StoneAnimationsConfig } from '../../../global/app';
 
 @Component({
     tag: 'kaigo-stone',
@@ -52,11 +53,11 @@ export class Stone {
 
     playedStoneAnimation() {
         const keyframes:Keyframe[] = [
-            { transform: 'translate3D(0, 0, 900px)' },
-            { transform: 'translate3D(0, 0, 0)' }
+            StoneAnimationsConfig.addStonesKeyframeStates.start,
+            StoneAnimationsConfig.addStonesKeyframeStates.end
         ]
         const options:KeyframeAnimationOptions = {
-                duration: 250,
+                duration: StoneAnimationsConfig.standardMoveAnimationDuration,
                 easing: 'ease-in'
         };
         this.applyAnimation(keyframes, options);
@@ -64,11 +65,12 @@ export class Stone {
 
     removedStoneAnimation() {
         const keyframes:Keyframe[] = [
-            { transform: 'translate3D(0, 0, 0)' },
-            { transform: 'translate3D(0, 0, 900px)' }
+            StoneAnimationsConfig.removeStoneKeyframeStates.start,
+            StoneAnimationsConfig.removeStoneKeyframeStates.end
         ]
         const options:KeyframeAnimationOptions = {
-                duration: 250,
+                duration: StoneAnimationsConfig.standardMoveAnimationDuration,
+                delay: StoneAnimationsConfig.standardMoveAnimationDuration, // start animation after stone has been played
                 easing: 'ease-out'
         };
         this.applyAnimation(keyframes, options).then(() => {
