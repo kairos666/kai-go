@@ -46,12 +46,10 @@ export class GoGame {
         const eventDetails = event.detail;
         switch(eventDetails.interactionType) {
             case BoardEvents.POS_FOCUS:
-                // simulate move and update board cursor
-                const simulatedMoveResult = this.play(eventDetails.position2DIndex.x, eventDetails.position2DIndex.y, this.goGame.turn, true);
                 this.positionMoveStatus = {
                     position1DIndex: eventDetails.position1DIndex,
                     position2DIndex: eventDetails.position2DIndex,
-                    isValidMove: (typeof simulatedMoveResult !== 'number')
+                    isValidMove: this.isValid(eventDetails.position2DIndex.x, eventDetails.position2DIndex.y, this.goGame.turn)
                 }
             break;
             case BoardEvents.POS_ACTION:
